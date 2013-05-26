@@ -1,7 +1,12 @@
 
 package com.uphyca.android;
 
+import android.content.ContentValues;
+import android.content.Context;
 import android.database.Cursor;
+import android.database.sqlite.SQLiteDatabase;
+import android.net.Uri;
+import android.os.AsyncTask;
 import android.os.Bundle;
 import android.os.Handler;
 import android.support.v4.app.FragmentActivity;
@@ -16,77 +21,117 @@ import com.uphyca.support.v4.os.OperationCanceledExceptionCompat;
 
 public class ExampleActivity extends FragmentActivity implements LoaderCallbacks<Cursor>, Runnable {
 
-    private Handler mHandler = new Handler();
+    private final Handler mHandler;
+    private AsyncTaskLoaderCompat<Cursor> mLoader;
 
-    /**
-     * Called when the activity is first created.
-     * 
-     * @param savedInstanceState If the activity is being re-initialized after
-     *            previously being shut down then this Bundle contains the data it most
-     *            recently supplied in onSaveInstanceState(Bundle). <b>Note: Otherwise it is null.</b>
-     */
+    public ExampleActivity() {
+        mHandler = new Handler();
+    }
+
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+
+        final class SampleDataLoader extends AsyncTask<Integer, Void, Void> {
+
+            @Override
+            protected Void doInBackground(Integer... params) {
+
+                ExampleSQLiteOpenHelper helper = new ExampleSQLiteOpenHelper(getApplicationContext());
+                SQLiteDatabase db = helper.getWritableDatabase();
+
+                Cursor c = db.rawQuery("select count(_id) from example", null);
+                if (c.moveToFirst()) {
+                    if (c.getInt(0) > 0) {
+                        return null;
+                    }
+                }
+
+                showToast("Loading sample data...");
+
+                db.beginTransaction();
+
+                ContentValues values = new ContentValues();
+                int count = params[0];
+                for (int i = 0; i < count; ++i) {
+                    values.put("name", "name" + Integer.toString(i));
+                    db.insert("example", null, values);
+                    if (i % 10000 == 0) {
+                        db.setTransactionSuccessful();
+                        db.endTransaction();
+                        db.beginTransaction();
+                    }
+                }
+
+                db.setTransactionSuccessful();
+                db.endTransaction();
+
+                return null;
+            }
+
+            @Override
+            protected void onPostExecute(Void result) {
+                dispatchSampleDataLoaded();
+            }
+        }
+
+        new SampleDataLoader().execute(100000);
+    }
+
+    public void dispatchSampleDataLoaded() {
+        showToast("Execute query");
         getSupportLoaderManager().initLoader(0, null, this);
-    }
-
-    @Override
-    protected void onResume() {
-        super.onResume();
-        run();
-    }
-
-    @Override
-    protected void onPause() {
-        mHandler.removeCallbacks(this);
-        super.onPause();
     }
 
     public Loader<Cursor> onCreateLoader(int id, Bundle args) {
 
-        String[] projection = {
-            "name"
-        };
-        String selection = null;
-        String[] selectionArgs = null;
-        String sortOrder = null;
-        mLoader = new CursorLoaderCompat(this, ExampleContentProvider.sContentUri, projection, selection, selectionArgs, sortOrder) {
+        final class NotifyOperationCancelledLoader extends CursorLoaderCompat {
+
+            public NotifyOperationCancelledLoader(Context context, Uri uri, String[] projection, String selection, String[] selectionArgs, String sortOrder) {
+                super(context, uri, projection, selection, selectionArgs, sortOrder);
+            }
+
             @Override
             protected Cursor onLoadInBackground() {
                 try {
                     return super.onLoadInBackground();
                 } catch (final OperationCanceledExceptionCompat e) {
                     e.printStackTrace();
-                    mHandler.post(new Runnable() {
-                        public void run() {
-                            Toast.makeText(getContext(), e.toString(), Toast.LENGTH_SHORT)
-                                 .show();
-                            getSupportLoaderManager().restartLoader(0, null, ExampleActivity.this);
-                        }
-                    });
+                    showToast("Load cancelled - " + e.toString());
                     return null;
                 }
             }
-        };
-        mLoader.setUpdateThrottle(1000L);
-        return mLoader;
+        }
+
+        try {
+            return mLoader = new NotifyOperationCancelledLoader(this, ExampleContentProvider.sContentUri, null, "name like ?", new String[] {
+                "%ame%"
+            }, "name");
+        } finally {
+            mHandler.postDelayed(this, 100L);
+        }
     }
 
-    private AsyncTaskLoaderCompat<Cursor> mLoader;
-
     public void onLoadFinished(Loader<Cursor> loader, Cursor data) {
+        if (data != null) {
+            showToast("Load finished");
+        }
     }
 
     public void onLoaderReset(Loader<Cursor> loader) {
     }
 
     public void run() {
-        getContentResolver().notifyChange(ExampleContentProvider.sContentUri, null);
-        if (mLoader != null) {
-            mLoader.cancelLoadInBackground();
-        }
-        mHandler.postDelayed(this, 1000L);
+        mLoader.cancelLoadInBackground();
+    }
+
+    private void showToast(final String text) {
+        runOnUiThread(new Runnable() {
+            public void run() {
+                Toast.makeText(getApplicationContext(), text, Toast.LENGTH_SHORT)
+                     .show();
+            }
+        });
     }
 }
