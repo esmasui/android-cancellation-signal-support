@@ -2,7 +2,6 @@
 package com.uphyca.android;
 
 import android.content.ContentValues;
-import android.content.Context;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.net.Uri;
@@ -87,10 +86,13 @@ public class ExampleActivity extends FragmentActivity implements LoaderCallbacks
         getSupportLoaderManager().initLoader(0, null, this);
     }
 
-    private final class ExampleCursorLoader extends CursorLoaderCompat {
+    private static final class ExampleCursorLoader extends CursorLoaderCompat {
 
-        public ExampleCursorLoader(Context context, Uri uri, String[] projection, String selection, String[] selectionArgs, String sortOrder) {
+        private final ExampleActivity mOwner;
+
+        public ExampleCursorLoader(ExampleActivity context, Uri uri, String[] projection, String selection, String[] selectionArgs, String sortOrder) {
             super(context, uri, projection, selection, selectionArgs, sortOrder);
+            mOwner = context;
         }
 
         @Override
@@ -99,7 +101,7 @@ public class ExampleActivity extends FragmentActivity implements LoaderCallbacks
                 return super.onLoadInBackground();
             } catch (final OperationCanceledExceptionCompat e) {
                 Log.i("cancellation-signal", e.toString(), e);
-                showToast("Load cancelled - " + e.toString());
+                mOwner.showToast("Load cancelled - " + e.toString());
                 return null;
             }
         }

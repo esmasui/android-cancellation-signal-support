@@ -75,7 +75,7 @@ public class ExampleContentProvider extends ContentProviderCompat {
 public class ExampleActivity extends FragmentActivity implements LoaderCallbacks<Cursor>, Runnable {
 
     //Define the loader that extends CursorLoaderCompat
-    private final class ExampleCursorLoader extends CursorLoaderCompat {
+    private static final class ExampleCursorLoader extends CursorLoaderCompat {
 
         public ExampleCursorLoader(Context context, Uri uri, String[] projection, String selection, String[] selectionArgs, String sortOrder) {
             super(context, uri, projection, selection, selectionArgs, sortOrder);
