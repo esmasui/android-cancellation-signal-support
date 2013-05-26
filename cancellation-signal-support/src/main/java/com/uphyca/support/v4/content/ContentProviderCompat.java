@@ -18,10 +18,15 @@ package com.uphyca.support.v4.content;
 
 import android.annotation.TargetApi;
 import android.content.ContentProvider;
+import android.content.ContentResolver;
+import android.database.ContentObserver;
 import android.database.Cursor;
 import android.net.Uri;
 import android.os.CancellationSignal;
+import android.os.Handler;
+import android.os.Looper;
 import android.os.OperationCanceledException;
+import android.util.Log;
 
 import com.uphyca.support.v4.os.CancellationSignalCompat;
 import com.uphyca.support.v4.os.OperationCanceledExceptionCompat;
@@ -32,7 +37,7 @@ public abstract class ContentProviderCompat extends ContentProvider {
     @Override
     public final Cursor query(Uri uri, String[] projection, String selection, String[] selectionArgs, String sortOrder, CancellationSignal cancellationSignal) {
         try {
-            return query(uri, projection, selection, selectionArgs, sortOrder, CancellationSignalCompat.valueOf(cancellationSignal));
+            return supportQuery(uri, projection, selection, selectionArgs, sortOrder, CancellationSignalCompat.valueOf(cancellationSignal));
         } catch (OperationCanceledExceptionCompat e) {
             RuntimeException operationCanceledException = OperationCanceledExceptionCompat.class.cast(e)
                                                                                                 .getOperationCanceledException();
@@ -46,7 +51,37 @@ public abstract class ContentProviderCompat extends ContentProvider {
         }
     }
 
-    public abstract Cursor query(Uri uri, String[] projection, String selection, String[] selectionArgs, String sortOrder, CancellationSignalCompat cancellationSignal);
+    private Handler mHandler = new Handler(Looper.myLooper());
+
+    @Override
+    public final Cursor query(Uri uri, String[] projection, String selection, String[] selectionArgs, String sortOrder) {
+        String cancellationSignal = uri.getQueryParameter("cancellationsignal");
+        if (cancellationSignal == null) {
+            return supportQuery(uri, projection, selection, selectionArgs, sortOrder);
+        } else {
+            final CancellationSignalCompat signal = new CancellationSignalCompat();
+            final ContentObserver contentObserver = new ContentObserver(mHandler) {
+                @Override
+                public void onChange(boolean selfChange) {
+                    Log.d("SQLiteLog", "cancel received");
+                    signal.cancel();
+                }
+            };
+            final ContentResolver resolver = getContext().getContentResolver();
+            try {
+                resolver.registerContentObserver(uri, false, contentObserver);
+                return supportQuery(uri, projection, selection, selectionArgs, sortOrder, signal);
+            } finally {
+                resolver.unregisterContentObserver(contentObserver);
+            }
+        }
+    }
+
+    public abstract Cursor supportQuery(Uri uri, String[] projection, String selection, String[] selectionArgs, String sortOrder);
+
+    public Cursor supportQuery(Uri uri, String[] projection, String selection, String[] selectionArgs, String sortOrder, CancellationSignalCompat cancellationSignal) {
+        return supportQuery(uri, projection, selection, selectionArgs, sortOrder);
+    }
 
     @TargetApi(16)
     static final class OperationCanceledExceptionFactory {

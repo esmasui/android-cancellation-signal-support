@@ -8,6 +8,7 @@ import android.net.Uri;
 import com.uphyca.support.v4.content.ContentProviderCompat;
 import com.uphyca.support.v4.database.sqlite.SQLiteDatabaseCompat;
 import com.uphyca.support.v4.database.sqlite.SQLiteOpenHelperCompat;
+import com.uphyca.support.v4.database.sqlite.SQLiteQueryBuilderCompat;
 import com.uphyca.support.v4.os.CancellationSignalCompat;
 
 public class ExampleContentProvider extends ContentProviderCompat {
@@ -20,19 +21,23 @@ public class ExampleContentProvider extends ContentProviderCompat {
         return true;
     }
 
+    //    @Override
+    //    public Cursor query(Uri uri, String[] projection, String selection, String[] selectionArgs, String sortOrder) {
+    //        return query(uri, projection, selection, selectionArgs, sortOrder, (CancellationSignalCompat) null);
+    //    }
+
     @Override
-    public Cursor query(Uri uri, String[] projection, String selection, String[] selectionArgs, String sortOrder) {
-        return query(uri, projection, selection, selectionArgs, sortOrder, (CancellationSignalCompat) null);
+    public Cursor supportQuery(Uri uri, String[] projection, String selection, String[] selectionArgs, String sortOrder) {
+        return supportQuery(uri, projection, selection, selectionArgs, sortOrder, null);
     }
 
     @Override
-    public Cursor query(Uri uri, String[] projection, String selection, String[] selectionArgs, String sortOrder, CancellationSignalCompat cancellationSignal) {
+    public Cursor supportQuery(Uri uri, String[] projection, String selection, String[] selectionArgs, String sortOrder, CancellationSignalCompat cancellationSignal) {
 
         final SQLiteDatabaseCompat db = mSqLiteOpenHelper.getSupportReadableDatabase();
-
-        Cursor returnThis = db.query(false, "example", projection, selection, selectionArgs, null, null, null, null, cancellationSignal);
-
-        return returnThis;
+        SQLiteQueryBuilderCompat builder = new SQLiteQueryBuilderCompat();
+        builder.setTables("example");
+        return builder.query(db, projection, selection, selectionArgs, null, null, sortOrder, null, cancellationSignal);
     }
 
     @Override

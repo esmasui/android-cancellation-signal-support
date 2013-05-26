@@ -95,7 +95,9 @@ public final class ContentResolverCompat extends ContentResolverWrapper {
     private static final class LegacyQueryExecutor implements QueryExecutor {
         @Override
         public Cursor query(ContentResolverCompat resolver, Uri url, String[] projection, String selection, String[] selectionArgs, String sortOrder, CancellationSignalCompat cancellationSignal) {
-            return resolver.mUnderlying.query(url, projection, selection, selectionArgs, sortOrder);
+            return resolver.mUnderlying.query(url.buildUpon()
+                                                 .appendQueryParameter("cancellationsignal", "true")
+                                                 .build(), projection, selection, selectionArgs, sortOrder);
         }
     }
 

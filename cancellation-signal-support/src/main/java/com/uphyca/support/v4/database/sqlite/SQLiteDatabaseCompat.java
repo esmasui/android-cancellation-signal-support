@@ -22,6 +22,7 @@ import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteDatabase.CursorFactory;
 import android.os.Build;
 
+import com.uphyca.support.v4.database.sqlite.CancelableExecutor.CancellableQueryTask;
 import com.uphyca.support.v4.os.CancellationSignalCompat;
 import com.uphyca.support.v4.os.ExceptionConverter;
 
@@ -105,23 +106,44 @@ public final class SQLiteDatabaseCompat extends SQLiteDatabaseWrapper {
     private static final class LegacyQueryExecutor implements QueryExecutor {
 
         @Override
-        public Cursor query(SQLiteDatabaseCompat db, boolean distinct, String table, String[] columns, String selection, String[] selectionArgs, String groupBy, String having, String orderBy, String limit, CancellationSignalCompat cancellationSignal) {
-            return db.mUnderlying.query(distinct, table, columns, selection, selectionArgs, groupBy, having, orderBy, limit);
+        public Cursor query(SQLiteDatabaseCompat db, final boolean distinct, final String table, final String[] columns, final String selection, final String[] selectionArgs, final String groupBy, final String having, final String orderBy, final String limit, CancellationSignalCompat cancellationSignal) {
+            return CancelableExecutor.query(db, new CancellableQueryTask() {
+                @Override
+                public Cursor query(SQLiteDatabaseCompat db) {
+                    return db.mUnderlying.query(distinct, table, columns, selection, selectionArgs, groupBy, having, orderBy, limit);
+                }
+            }, cancellationSignal);
         }
 
         @Override
-        public Cursor queryWithFactory(SQLiteDatabaseCompat db, CursorFactory cursorFactory, boolean distinct, String table, String[] columns, String selection, String[] selectionArgs, String groupBy, String having, String orderBy, String limit, CancellationSignalCompat cancellationSignal) {
-            return db.mUnderlying.queryWithFactory(cursorFactory, distinct, table, columns, selection, selectionArgs, groupBy, having, orderBy, limit);
+        public Cursor queryWithFactory(SQLiteDatabaseCompat db, final CursorFactory cursorFactory, final boolean distinct, final String table, final String[] columns, final String selection, final String[] selectionArgs, final String groupBy, final String having, final String orderBy, final String limit, CancellationSignalCompat cancellationSignal) {
+            return CancelableExecutor.query(db, new CancellableQueryTask() {
+                @Override
+                public Cursor query(SQLiteDatabaseCompat db) {
+                    return db.mUnderlying.queryWithFactory(cursorFactory, distinct, table, columns, selection, selectionArgs, groupBy, having, orderBy, limit);
+                }
+            }, cancellationSignal);
         }
 
         @Override
-        public Cursor rawQuery(SQLiteDatabaseCompat db, String sql, String[] selectionArgs, CancellationSignalCompat cancellationSignal) {
-            return db.mUnderlying.rawQuery(sql, selectionArgs);
+        public Cursor rawQuery(SQLiteDatabaseCompat db, final String sql, final String[] selectionArgs, CancellationSignalCompat cancellationSignal) {
+            return CancelableExecutor.query(db, new CancellableQueryTask() {
+                @Override
+                public Cursor query(SQLiteDatabaseCompat db) {
+                    return db.mUnderlying.rawQuery(sql, selectionArgs);
+                }
+            }, cancellationSignal);
         }
 
         @Override
-        public Cursor rawQueryWithFactory(SQLiteDatabaseCompat db, CursorFactory cursorFactory, String sql, String[] selectionArgs, String editTable, CancellationSignalCompat cancellationSignal) {
-            return db.mUnderlying.rawQueryWithFactory(cursorFactory, sql, selectionArgs, editTable);
+        public Cursor rawQueryWithFactory(SQLiteDatabaseCompat db, final CursorFactory cursorFactory, final String sql, final String[] selectionArgs, final String editTable, CancellationSignalCompat cancellationSignal) {
+            return CancelableExecutor.query(db, new CancellableQueryTask() {
+                @Override
+                public Cursor query(SQLiteDatabaseCompat db) {
+                    return db.mUnderlying.rawQueryWithFactory(cursorFactory, sql, selectionArgs, editTable);
+                }
+            }, cancellationSignal);
+
         }
     }
 

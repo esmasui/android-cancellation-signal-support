@@ -38,7 +38,7 @@ public final class CancellationSignalCompat {
         this(null);
     }
 
-    public CancellationSignalCompat(Object cancellationSignal) {
+    CancellationSignalCompat(Object cancellationSignal) {
         mCanceller = newCanceller(cancellationSignal);
     }
 

@@ -17,10 +17,10 @@ public abstract class SQLiteOpenHelperCompat extends SQLiteOpenHelper {
     }
 
     public SQLiteDatabaseCompat getSupportReadableDatabase() {
-        return SQLiteDatabaseCompat.newInstance(super.getReadableDatabase());
+        return SQLiteDatabaseCompat.newInstance(getReadableDatabase());
     }
 
     public SQLiteDatabaseCompat getSupportWritableDatabase() {
-        return SQLiteDatabaseCompat.newInstance(super.getWritableDatabase());
+        return SQLiteDatabaseCompat.newInstance(getWritableDatabase());
     }
 }

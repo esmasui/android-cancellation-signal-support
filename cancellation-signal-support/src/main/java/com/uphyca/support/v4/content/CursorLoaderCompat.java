@@ -21,14 +21,18 @@ package com.uphyca.support.v4.content;
 import java.io.FileDescriptor;
 import java.io.PrintWriter;
 import java.util.Arrays;
+import java.util.UUID;
 
 import android.content.ContentResolver;
 import android.content.Context;
 import android.database.ContentObserver;
 import android.database.Cursor;
 import android.net.Uri;
+import android.os.Build;
 import android.support.v4.content.LoaderTrojanHorse;
+import android.util.Log;
 
+import com.uphyca.support.v4.database.sqlite.CancellingCursor;
 import com.uphyca.support.v4.os.CancellationSignalCompat;
 import com.uphyca.support.v4.os.OperationCanceledExceptionCompat;
 
@@ -55,15 +59,73 @@ public class CursorLoaderCompat extends AsyncTaskLoaderCompat<Cursor> {
     /* Runs on a worker thread */
     @Override
     public Cursor loadInBackground() {
+
+        final Object[] cancelled;
+        final CancellingCursor[] cursorHolder;
+        final ContentObserver contentObserver;
+        final String signalId = UUID.randomUUID()
+                                    .toString();
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.JELLY_BEAN) {
+            cancelled = new Object[1];
+            cursorHolder = new CancellingCursor[1];
+            contentObserver = new ContentObserver(mHandler) {
+                @Override
+                public void onChange(boolean selfChange, Uri uri) {
+                    if (signalId.equals(uri.getQueryParameter("cancellationsignal"))) {
+                        cancelled[0] = new Object();
+                        Log.d("SQLiteLog", "cancel accepted");
+                    }
+                }
+            };
+        } else {
+            cancelled = null;
+            contentObserver = null;
+            cursorHolder = null;
+        }
+
         synchronized (this) {
             if (isLoadInBackgroundCanceled()) {
                 throw new OperationCanceledExceptionCompat();
             }
             mCancellationSignal = new CancellationSignalCompat();
+            if (Build.VERSION.SDK_INT < Build.VERSION_CODES.JELLY_BEAN) {
+                final ContentResolverCompat resolver = getSupportContext().getSupportContentResolver();
+                mCancellationSignal.setOnCancelListener(new CancellationSignalCompat.OnCancelListener() {
+                    @Override
+                    public void onCancel() {
+                        resolver.notifyChange(mUri.buildUpon()
+                                              .appendQueryParameter("cancellationsignal", signalId)
+                                              .build(), null);
+                        if (cursorHolder[0] != null) {
+                            cursorHolder[0].setCancelled();
+                            cursorHolder[0].close();
+                        }
+                        Log.d("SQLiteLog", "cancel requested");
+                    }
+                });
+                resolver.registerContentObserver(mUri.buildUpon()
+                                                 .appendQueryParameter("cancellationsignal", signalId)
+                                                 .build(), false, contentObserver);
+            }
         }
         try {
-            Cursor cursor = getSupportContext().getSupportContentResolver()
-                                               .query(mUri, mProjection, mSelection, mSelectionArgs, mSortOrder, mCancellationSignal);
+            final Cursor cursor;
+            if (Build.VERSION.SDK_INT < Build.VERSION_CODES.JELLY_BEAN) {
+                Cursor c = getSupportContext().getSupportContentResolver()
+                                              .query(mUri.buildUpon()
+                                                         .appendQueryParameter("cancellationsignal", signalId)
+                                                         .build(), mProjection, mSelection, mSelectionArgs, mSortOrder, mCancellationSignal);
+                if (c != null) {
+                    cursorHolder[0] = new CancellingCursor(c);
+                    cursor = cursorHolder[0];
+                } else {
+                    cursor = c;
+                }
+            } else {
+                cursor = getSupportContext().getSupportContentResolver()
+                                            .query(mUri, mProjection, mSelection, mSelectionArgs, mSortOrder, mCancellationSignal);
+            }
+
             if (cursor != null) {
                 // Ensure the cursor window is filled
                 cursor.getCount();
@@ -71,8 +133,20 @@ public class CursorLoaderCompat extends AsyncTaskLoaderCompat<Cursor> {
             }
             return cursor;
         } finally {
+            if (Build.VERSION.SDK_INT < Build.VERSION_CODES.JELLY_BEAN) {
+                getSupportContext().getSupportContentResolver()
+                                   .unregisterContentObserver(contentObserver);
+            }
             synchronized (this) {
                 mCancellationSignal = null;
+            }
+
+            if (Build.VERSION.SDK_INT < Build.VERSION_CODES.JELLY_BEAN) {
+                if (cancelled[0] != null) {
+                    OperationCanceledExceptionCompat e = new OperationCanceledExceptionCompat();
+                    e.fillInStackTrace();
+                    throw e;
+                }
             }
         }
     }

@@ -21,6 +21,7 @@ import android.database.Cursor;
 import android.database.sqlite.SQLiteQueryBuilder;
 import android.os.Build;
 
+import com.uphyca.support.v4.database.sqlite.CancelableExecutor.CancellableQueryTask;
 import com.uphyca.support.v4.os.CancellationSignalCompat;
 import com.uphyca.support.v4.os.ExceptionConverter;
 
@@ -32,6 +33,14 @@ public class SQLiteQueryBuilderCompat extends SQLiteQueryBuilder {
         } catch (RuntimeException e) {
             throw ExceptionConverter.convertException(e);
         }
+    }
+
+    public Cursor query(SQLiteDatabaseCompat db, String[] projectionIn, String selection, String[] selectionArgs, String groupBy, String having, String sortOrder) {
+        return super.query(db.mUnderlying, projectionIn, selection, selectionArgs, groupBy, having, sortOrder);
+    }
+
+    public Cursor query(SQLiteDatabaseCompat db, String[] projectionIn, String selection, String[] selectionArgs, String groupBy, String having, String sortOrder, String limit) {
+        return super.query(db.mUnderlying, projectionIn, selection, selectionArgs, groupBy, having, sortOrder, limit);
     }
 
     private static final QueryExecutor sQueryExecutor = newQueryExecutor();
@@ -62,8 +71,13 @@ public class SQLiteQueryBuilderCompat extends SQLiteQueryBuilder {
 
     private static final class LegacyQueryExecutor implements QueryExecutor {
         @Override
-        public Cursor query(SQLiteQueryBuilderCompat builder, SQLiteDatabaseCompat db, String[] projectionIn, String selection, String[] selectionArgs, String groupBy, String having, String sortOrder, String limit, CancellationSignalCompat cancellationSignal) {
-            return builder.query(db.mUnderlying, projectionIn, selection, selectionArgs, groupBy, having, sortOrder, limit);
+        public Cursor query(final SQLiteQueryBuilderCompat builder, final SQLiteDatabaseCompat db, final String[] projectionIn, final String selection, final String[] selectionArgs, final String groupBy, final String having, final String sortOrder, final String limit, final CancellationSignalCompat cancellationSignal) {
+            return CancelableExecutor.query(db, new CancellableQueryTask() {
+                @Override
+                public Cursor query(SQLiteDatabaseCompat db) {
+                    return builder.query(db.mUnderlying, projectionIn, selection, selectionArgs, groupBy, having, sortOrder, limit);
+                }
+            }, cancellationSignal);
         }
     }
 
