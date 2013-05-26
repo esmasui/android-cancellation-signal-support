@@ -62,8 +62,8 @@ public class CursorLoaderCompat extends AsyncTaskLoaderCompat<Cursor> {
             mCancellationSignal = new CancellationSignalCompat();
         }
         try {
-            Cursor cursor = ContentResolverCompat.newInstance(getContext().getContentResolver())
-                                                 .query(mUri, mProjection, mSelection, mSelectionArgs, mSortOrder, mCancellationSignal);
+            Cursor cursor = getSupportContext().getSupportContentResolver()
+                                               .query(mUri, mProjection, mSelection, mSelectionArgs, mSortOrder, mCancellationSignal);
             if (cursor != null) {
                 // Ensure the cursor window is filled
                 cursor.getCount();

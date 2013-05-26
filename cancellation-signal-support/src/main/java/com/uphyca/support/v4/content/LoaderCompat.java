@@ -44,6 +44,7 @@ import android.support.v4.content.Loader;
  */
 public class LoaderCompat<D> extends Loader<D> {
 
+    ContextCompat mContext;
     OnLoadCanceledListener<D> mOnLoadCanceledListener;
 
     /**
@@ -74,6 +75,7 @@ public class LoaderCompat<D> extends Loader<D> {
      */
     public LoaderCompat(Context context) {
         super(context);
+        mContext = ContextCompat.newInstance(context);
     }
 
     /**
@@ -146,5 +148,9 @@ public class LoaderCompat<D> extends Loader<D> {
      */
     protected boolean onCancelLoad() {
         return false;
+    }
+    
+    public ContextCompat getSupportContext() {
+        return mContext;
     }
 }

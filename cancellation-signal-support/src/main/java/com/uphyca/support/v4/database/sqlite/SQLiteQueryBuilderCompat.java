@@ -24,15 +24,7 @@ import android.os.Build;
 import com.uphyca.support.v4.os.CancellationSignalCompat;
 import com.uphyca.support.v4.os.ExceptionConverter;
 
-public class SQLiteQueryBuilderCompat extends SQLiteQueryBuilderWrapper {
-
-    public static final SQLiteQueryBuilderCompat newInstance() {
-        return new SQLiteQueryBuilderCompat(new SQLiteQueryBuilder());
-    }
-
-    protected SQLiteQueryBuilderCompat(SQLiteQueryBuilder underlying) {
-        super(underlying);
-    }
+public class SQLiteQueryBuilderCompat extends SQLiteQueryBuilder {
 
     public Cursor query(SQLiteDatabaseCompat db, String[] projectionIn, String selection, String[] selectionArgs, String groupBy, String having, String sortOrder, String limit, CancellationSignalCompat cancellationSignal) {
         try {
@@ -71,7 +63,7 @@ public class SQLiteQueryBuilderCompat extends SQLiteQueryBuilderWrapper {
     private static final class LegacyQueryExecutor implements QueryExecutor {
         @Override
         public Cursor query(SQLiteQueryBuilderCompat builder, SQLiteDatabaseCompat db, String[] projectionIn, String selection, String[] selectionArgs, String groupBy, String having, String sortOrder, String limit, CancellationSignalCompat cancellationSignal) {
-            return builder.mUnderlying.query(db.mUnderlying, projectionIn, selection, selectionArgs, groupBy, having, sortOrder, limit);
+            return builder.query(db.mUnderlying, projectionIn, selection, selectionArgs, groupBy, having, sortOrder, limit);
         }
     }
 
@@ -80,9 +72,9 @@ public class SQLiteQueryBuilderCompat extends SQLiteQueryBuilderWrapper {
         @Override
         public Cursor query(SQLiteQueryBuilderCompat builder, SQLiteDatabaseCompat db, String[] projectionIn, String selection, String[] selectionArgs, String groupBy, String having, String sortOrder, String limit, CancellationSignalCompat cancellationSignal) {
             if (cancellationSignal == null) {
-                return builder.mUnderlying.query(db.mUnderlying, projectionIn, selection, selectionArgs, groupBy, having, sortOrder, limit);
+                return builder.query(db.mUnderlying, projectionIn, selection, selectionArgs, groupBy, having, sortOrder, limit);
             } else {
-                return builder.mUnderlying.query(db.mUnderlying, projectionIn, selection, selectionArgs, groupBy, having, sortOrder, limit, cancellationSignal.toCancellationSignal());
+                return builder.query(db.mUnderlying, projectionIn, selection, selectionArgs, groupBy, having, sortOrder, limit, cancellationSignal.toCancellationSignal());
             }
         }
     }

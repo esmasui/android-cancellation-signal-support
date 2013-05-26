@@ -21,6 +21,7 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.util.ArrayList;
 
+import android.annotation.TargetApi;
 import android.content.ContentProviderClient;
 import android.content.ContentProviderOperation;
 import android.content.ContentProviderResult;
@@ -51,10 +52,12 @@ class ContentResolverWrapper {
         return mUnderlying.acquireContentProviderClient(uri);
     }
 
+    @TargetApi(16)
     public final ContentProviderClient acquireUnstableContentProviderClient(String name) {
         return mUnderlying.acquireUnstableContentProviderClient(name);
     }
 
+    @TargetApi(16)
     public final ContentProviderClient acquireUnstableContentProviderClient(Uri uri) {
         return mUnderlying.acquireUnstableContentProviderClient(uri);
     }

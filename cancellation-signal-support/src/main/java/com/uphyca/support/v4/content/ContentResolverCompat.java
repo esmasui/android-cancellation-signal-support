@@ -17,6 +17,7 @@
 package com.uphyca.support.v4.content;
 
 import android.annotation.SuppressLint;
+import android.annotation.TargetApi;
 import android.content.ContentResolver;
 import android.database.Cursor;
 import android.net.Uri;
@@ -45,6 +46,24 @@ public final class ContentResolverCompat extends ContentResolverWrapper {
         } catch (RuntimeException e) {
             throw ExceptionConverter.convertException(e);
         }
+    }
+
+    public final ContentProviderClientCompat acquireSupportContentProviderClient(String name) {
+        return ContentProviderClientCompat.newInstance(acquireContentProviderClient(name));
+    }
+
+    public final ContentProviderClientCompat acquireSupportContentProviderClient(Uri uri) {
+        return ContentProviderClientCompat.newInstance(acquireContentProviderClient(uri));
+    }
+
+    @TargetApi(16)
+    public final ContentProviderClientCompat acquireSupportUnstableContentProviderClient(String name) {
+        return ContentProviderClientCompat.newInstance(acquireUnstableContentProviderClient(name));
+    }
+
+    @TargetApi(16)
+    public final ContentProviderClientCompat acquireSupportUnstableContentProviderClient(Uri uri) {
+        return ContentProviderClientCompat.newInstance(acquireUnstableContentProviderClient(uri));
     }
 
     private static final QueryExecutor sQueryExecutor = newQueryExecutor();
