@@ -12,6 +12,7 @@ import android.os.Handler;
 import android.support.v4.app.FragmentActivity;
 import android.support.v4.app.LoaderManager.LoaderCallbacks;
 import android.support.v4.content.Loader;
+import android.util.Log;
 import android.widget.Toast;
 
 import com.example.cancellationsignal.support.R;
@@ -20,6 +21,8 @@ import com.uphyca.support.v4.content.CursorLoaderCompat;
 import com.uphyca.support.v4.os.OperationCanceledExceptionCompat;
 
 public class ExampleActivity extends FragmentActivity implements LoaderCallbacks<Cursor>, Runnable {
+
+    private static final Uri sContentUri = Uri.parse("content://com.example.cancellationsignal.support");
 
     private final Handler mHandler;
     private AsyncTaskLoaderCompat<Cursor> mLoader;
@@ -84,28 +87,28 @@ public class ExampleActivity extends FragmentActivity implements LoaderCallbacks
         getSupportLoaderManager().initLoader(0, null, this);
     }
 
-    public Loader<Cursor> onCreateLoader(int id, Bundle args) {
+    private final class ExampleCursorLoader extends CursorLoaderCompat {
 
-        final class NotifyOperationCancelledLoader extends CursorLoaderCompat {
-
-            public NotifyOperationCancelledLoader(Context context, Uri uri, String[] projection, String selection, String[] selectionArgs, String sortOrder) {
-                super(context, uri, projection, selection, selectionArgs, sortOrder);
-            }
-
-            @Override
-            protected Cursor onLoadInBackground() {
-                try {
-                    return super.onLoadInBackground();
-                } catch (final OperationCanceledExceptionCompat e) {
-                    e.printStackTrace();
-                    showToast("Load cancelled - " + e.toString());
-                    return null;
-                }
-            }
+        public ExampleCursorLoader(Context context, Uri uri, String[] projection, String selection, String[] selectionArgs, String sortOrder) {
+            super(context, uri, projection, selection, selectionArgs, sortOrder);
         }
 
+        @Override
+        protected Cursor onLoadInBackground() {
+            try {
+                return super.onLoadInBackground();
+            } catch (final OperationCanceledExceptionCompat e) {
+                Log.i("cancellation-signal", e.toString(), e);
+                showToast("Load cancelled - " + e.toString());
+                return null;
+            }
+        }
+    }
+
+    public Loader<Cursor> onCreateLoader(int id, Bundle args) {
+
         try {
-            return mLoader = new NotifyOperationCancelledLoader(this, ExampleContentProvider.sContentUri, null, "name like ?", new String[] {
+            return mLoader = new ExampleCursorLoader(this, sContentUri, null, "name like ?", new String[] {
                 "%ame%"
             }, "name");
         } finally {

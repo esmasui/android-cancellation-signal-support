@@ -4,7 +4,6 @@ package com.uphyca.android;
 import android.content.ContentValues;
 import android.database.Cursor;
 import android.net.Uri;
-import android.util.Log;
 
 import com.uphyca.support.v4.content.ContentProviderCompat;
 import com.uphyca.support.v4.database.sqlite.SQLiteDatabaseCompat;
@@ -12,10 +11,6 @@ import com.uphyca.support.v4.database.sqlite.SQLiteOpenHelperCompat;
 import com.uphyca.support.v4.os.CancellationSignalCompat;
 
 public class ExampleContentProvider extends ContentProviderCompat {
-
-    private static final String TAG = "cancellationSignal";
-
-    public static final Uri sContentUri = Uri.parse("content://com.example.cancellationsignal.support");
 
     private SQLiteOpenHelperCompat mSqLiteOpenHelper;
 
@@ -32,13 +27,10 @@ public class ExampleContentProvider extends ContentProviderCompat {
 
     @Override
     public Cursor query(Uri uri, String[] projection, String selection, String[] selectionArgs, String sortOrder, CancellationSignalCompat cancellationSignal) {
+
         final SQLiteDatabaseCompat db = mSqLiteOpenHelper.getSupportReadableDatabase();
 
-        Log.d(TAG, "execute query");
-
         Cursor returnThis = db.query(false, "example", projection, selection, selectionArgs, null, null, null, null, cancellationSignal);
-
-        Log.d(TAG, "query executed");
 
         return returnThis;
     }

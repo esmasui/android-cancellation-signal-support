@@ -16,7 +16,7 @@
 
 package com.uphyca.support.v4.content;
 
-import android.annotation.SuppressLint;
+import android.annotation.TargetApi;
 import android.content.ContentProvider;
 import android.database.Cursor;
 import android.net.Uri;
@@ -28,7 +28,7 @@ import com.uphyca.support.v4.os.OperationCanceledExceptionCompat;
 
 public abstract class ContentProviderCompat extends ContentProvider {
 
-    @SuppressLint("NewApi")
+    @TargetApi(16)
     @Override
     public final Cursor query(Uri uri, String[] projection, String selection, String[] selectionArgs, String sortOrder, CancellationSignal cancellationSignal) {
         try {
@@ -48,7 +48,7 @@ public abstract class ContentProviderCompat extends ContentProvider {
 
     public abstract Cursor query(Uri uri, String[] projection, String selection, String[] selectionArgs, String sortOrder, CancellationSignalCompat cancellationSignal);
 
-    @SuppressLint("NewApi")
+    @TargetApi(16)
     static final class OperationCanceledExceptionFactory {
         static RuntimeException newInstance() {
             return new OperationCanceledException();
