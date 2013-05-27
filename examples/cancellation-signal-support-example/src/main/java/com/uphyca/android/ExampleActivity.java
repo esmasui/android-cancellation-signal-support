@@ -46,6 +46,7 @@ public class ExampleActivity extends FragmentActivity implements LoaderCallbacks
                 Cursor c = db.rawQuery("select count(_id) from example", null);
                 if (c.moveToFirst()) {
                     if (c.getInt(0) > 0) {
+                        db.close();
                         return null;
                     }
                 }
@@ -68,6 +69,7 @@ public class ExampleActivity extends FragmentActivity implements LoaderCallbacks
 
                 db.setTransactionSuccessful();
                 db.endTransaction();
+                db.close();
 
                 return null;
             }
@@ -83,7 +85,10 @@ public class ExampleActivity extends FragmentActivity implements LoaderCallbacks
 
     public void dispatchSampleDataLoaded() {
         showToast("Execute query");
-        getSupportLoaderManager().initLoader(0, null, this);
+        Bundle args = new Bundle();
+        args.putString("query", "%ame%");
+        args.putString("order", "name");
+        getSupportLoaderManager().initLoader(0, args, this);
     }
 
     private static final class ExampleCursorLoader extends CursorLoaderCompat {
@@ -102,6 +107,7 @@ public class ExampleActivity extends FragmentActivity implements LoaderCallbacks
             } catch (final OperationCanceledExceptionCompat e) {
                 Log.i("cancellation-signal", e.toString(), e);
                 mOwner.showToast("Load cancelled - " + e.toString());
+                mOwner.cancelled();
                 return null;
             }
         }
@@ -109,18 +115,28 @@ public class ExampleActivity extends FragmentActivity implements LoaderCallbacks
 
     public Loader<Cursor> onCreateLoader(int id, Bundle args) {
 
-        try {
-            return mLoader = new ExampleCursorLoader(this, sContentUri, null, "name like ?", new String[] {
-                "%ame%"
-            }, "name");
-        } finally {
+        if (mLoader == null) {
             mHandler.postDelayed(this, 100L);
         }
+        mLoader = new ExampleCursorLoader(this, sContentUri, null, "name like ?", new String[] {
+            args.getString("query")
+        }, args.getString("order"));
+        return mLoader;
+    }
+
+    public void cancelled() {
+        runOnUiThread(new Runnable() {
+            public void run() {
+                Bundle args = new Bundle();
+                args.putString("query", "name0");
+                getSupportLoaderManager().restartLoader(0, args, ExampleActivity.this);
+            }
+        });
     }
 
     public void onLoadFinished(Loader<Cursor> loader, Cursor data) {
         if (data != null) {
-            showToast("Load finished");
+            showToast("Load finished: " + data.getCount());
         }
     }
 
