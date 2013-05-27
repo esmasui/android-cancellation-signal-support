@@ -1,0 +1,113 @@
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+
+    <groupId>com.uphyca.android</groupId>
+    <artifactId>cancellation-signal-support-parent</artifactId>
+    <version>1.0-SNAPSHOT</version>
+    <packaging>pom</packaging>
+
+    <name>cancellation-signal-support (Parent)</name>
+    <description>android-cancellation-signal-support is a compatibility library of android.os.CancellationSignal</description>
+    <url>https://github.com/esmasui/android-cancellation-signal-support</url>
+
+    <modules>
+        <module>cancellation-signal-support</module>
+        <module>examples</module>
+    </modules>
+
+    <properties>
+        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+        <java.version>1.6</java.version>
+        <java.encoding>utf-8</java.encoding>
+        <android.version>4.1.1.4</android.version>
+        <support-v4.version>r7</support-v4.version>
+        <junit.version>4.10</junit.version>
+    </properties>
+
+    <scm>
+        <url>https://github.com/esmasui/android-cancellation-signal-support</url>
+        <connection>scm:git:git://github.com/esmasui/android-cancellation-signal-support.git</connection>
+        <developerConnection>scm:git:ssh://git@github.com/esmasui/android-cancellation-signal-support.git</developerConnection>
+        <tag>HEAD</tag>
+    </scm>
+
+    <issueManagement>
+        <system>GitHub Issues</system>
+        <url>https://github.com/esmasui/android-cancellation-signal-support/issues</url>
+    </issueManagement>
+
+    <licenses>
+        <license>
+            <name>Apache 2.0</name>
+            <url>http://www.apache.org/licenses/LICENSE-2.0.txt</url>
+        </license>
+    </licenses>
+
+    <organization>
+        <name>uPhyca Inc.</name>
+        <url>http://www.uphyca.com</url>
+    </organization>
+
+
+    <dependencyManagement>
+        <dependencies>
+            <dependency>
+                <groupId>com.google.android</groupId>
+                <artifactId>android</artifactId>
+                <version>${android.version}</version>
+            </dependency>
+
+            <dependency>
+                <groupId>com.google.android</groupId>
+                <artifactId>support-v4</artifactId>
+                <version>${support-v4.version}</version>
+            </dependency>
+
+            <dependency>
+                <groupId>junit</groupId>
+                <artifactId>junit</artifactId>
+                <version>${junit.version}</version>
+            </dependency>
+        </dependencies>
+    </dependencyManagement>
+
+
+    <build>
+        <pluginManagement>
+            <plugins>
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-compiler-plugin</artifactId>
+                    <version>3.1</version>
+                </plugin>
+            </plugins>
+        </pluginManagement>
+        <plugins>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-compiler-plugin</artifactId>
+                <configuration>
+                    <source>${java.version}</source>
+                    <target>${java.version}</target>
+                    <encoding>${java.encoding}</encoding>
+                    <compilerArgument>-Xlint:all</compilerArgument>
+                    <showWarnings>true</showWarnings>
+                    <showDeprecation>true</showDeprecation>
+                </configuration>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-source-plugin</artifactId>
+                <executions>
+                    <execution>
+                        <id>attach-sources</id>
+                        <goals>
+                            <goal>jar</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
+        </plugins>
+    </build>
+</project>

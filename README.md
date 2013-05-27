@@ -94,43 +94,26 @@ public class ExampleActivity extends FragmentActivity implements LoaderCallbacks
 
     private static final Uri sContentUri = Uri.parse("content://com.example.cancellationsignal.support");
 
-    private final Handler mHandler;
     private AsyncTaskLoaderCompat<Cursor> mLoader;
-
-    public ExampleActivity() {
-        mHandler = new Handler();
-    }
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_main);
         
         // Initialize the loader
         getSupportLoaderManager().initLoader(0, null, this);
     }
     
-    @Override
-    public void run() {
+    public Loader<Cursor> onCreateLoader(int id, Bundle args) {
+        return mLoader = new ExampleCursorLoader(this, sContentUri, null, null, null, null);
+    }
+
+    public void cancelQuery() {
         // Cancel the query
         mLoader.cancelLoadInBackground();
     }
-
-    public Loader<Cursor> onCreateLoader(int id, Bundle args) {
-        try {
-            return mLoader = new ExampleCursorLoader(this, sContentUri, null, null, null, null);
-        } finally {
-
-            // Cancel the query 100ms after
-            mHandler.postDelayed(this, 100L);
-        }
-    }
-
-    public void onLoadFinished(Loader<Cursor> loader, Cursor data) {
-    }
-
-    public void onLoaderReset(Loader<Cursor> loader) {
-    }
+    
+    ...
 }
 ```
 
