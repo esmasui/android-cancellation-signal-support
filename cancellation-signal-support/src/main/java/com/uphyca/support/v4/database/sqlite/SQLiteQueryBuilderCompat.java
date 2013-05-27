@@ -34,6 +34,14 @@ public class SQLiteQueryBuilderCompat extends SQLiteQueryBuilder {
         }
     }
 
+    public Cursor query(SQLiteDatabaseCompat db, String[] projectionIn, String selection, String[] selectionArgs, String groupBy, String having, String sortOrder) {
+        return super.query(db.mUnderlying, projectionIn, selection, selectionArgs, groupBy, having, sortOrder);
+    }
+
+    public Cursor query(SQLiteDatabaseCompat db, String[] projectionIn, String selection, String[] selectionArgs, String groupBy, String having, String sortOrder, String limit) {
+        return super.query(db.mUnderlying, projectionIn, selection, selectionArgs, groupBy, having, sortOrder, limit);
+    }
+
     private static final QueryExecutor sQueryExecutor = newQueryExecutor();
 
     private static final QueryExecutor newQueryExecutor() {
